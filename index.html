@@ -9,7 +9,7 @@
   --bg: #0E1621; --bg2: #0B1018; --surface: #162030; --surface2: #1E2D40;
   --border: #253448; --border2: #1C2C3E; --text: #E8F0F9; --text2: #7A9ABB;
   --text3: #3D5570; --accent: #3B82F6; --accent2: #2563EB;
-  --accent-glow: rgba(59,130,246,0.14); --amber: #F59E0B; --amber2: #D97706;
+  --accent-glow: rgba(59,130,246,0.14); --neon-1: rgba(59,130,246,0.50); --neon-2: rgba(59,130,246,0.28); --neon-3: rgba(59,130,246,0.10); --neon-line: rgba(59,130,246,0.75); --amber: #F59E0B; --amber2: #D97706;
   --amber-bg: rgba(245,158,11,0.1); --green: #10B981; --green-bg: rgba(16,185,129,0.1);
 }
 @media (prefers-color-scheme: light) {
@@ -17,7 +17,7 @@
     --bg: #F5F8FC; --bg2: #EAEFF6; --surface: #FFFFFF; --surface2: #EDF2FA;
     --border: #D0DFF0; --border2: #E0EAF6; --text: #0E1621; --text2: #4A6880;
     --text3: #9BAFC5; --accent: #2563EB; --accent2: #1D4ED8;
-    --accent-glow: rgba(37,99,235,0.1); --amber: #D97706; --amber2: #B45309;
+    --accent-glow: rgba(37,99,235,0.1); --neon-1: rgba(37,99,235,0.30); --neon-2: rgba(37,99,235,0.16); --neon-3: rgba(37,99,235,0.06); --neon-line: rgba(37,99,235,0.55); --amber: #D97706; --amber2: #B45309;
     --amber-bg: rgba(217,119,6,0.08); --green: #059669; --green-bg: rgba(5,150,105,0.08);
   }
 }
@@ -25,7 +25,7 @@
   --bg: #0E1621; --bg2: #0B1018; --surface: #162030; --surface2: #1E2D40;
   --border: #253448; --border2: #1C2C3E; --text: #E8F0F9; --text2: #7A9ABB;
   --text3: #3D5570; --accent: #3B82F6; --accent2: #2563EB;
-  --accent-glow: rgba(59,130,246,0.14); --amber: #F59E0B; --amber2: #D97706;
+  --accent-glow: rgba(59,130,246,0.14); --neon-1: rgba(59,130,246,0.50); --neon-2: rgba(59,130,246,0.28); --neon-3: rgba(59,130,246,0.10); --neon-line: rgba(59,130,246,0.75); --amber: #F59E0B; --amber2: #D97706;
   --amber-bg: rgba(245,158,11,0.1); --green: #10B981; --green-bg: rgba(16,185,129,0.1);
 }
 
@@ -466,6 +466,28 @@ footer {
   .edu-date { display: none; }
   .contact-section { padding: 64px 20px; }
   footer { padding: 20px; flex-direction: column; gap: 8px; text-align: center; }
+}
+
+/* -- Neon hover highlight on clickables -- */
+.neon-hoverable { transition: box-shadow .28s ease, border-color .28s ease, background-color .28s ease; }
+.neon-hoverable.neon-hoverable:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--neon-line), 0 0 14px var(--neon-1),
+              0 0 34px var(--neon-2), inset 0 0 16px var(--neon-3);
+}
+a.neon-hoverable.neon-hoverable:hover,
+button.neon-hoverable.neon-hoverable:hover { background-color: var(--accent-glow); }
+a.neon-inline.neon-inline:hover { border-radius: 6px; box-shadow: 0 0 0 4px var(--accent-glow), 0 0 16px var(--neon-1); }
+body.cursor-hover #cursor-ring { box-shadow: 0 0 14px var(--neon-1), inset 0 0 12px var(--neon-2); }
+body.cursor-hover #cursor-dot { box-shadow: 0 0 12px var(--accent); }
+@media (prefers-reduced-motion: reduce) { .neon-hoverable { transition: none; } }
+
+/* Fallback state: if GSAP never loads, nothing stays stuck invisible. */
+body.no-gsap .nav-logo, body.no-gsap .nav-links, body.no-gsap .hero-role,
+body.no-gsap .hero-chips, body.no-gsap .hero-ctas, body.no-gsap .stat-item,
+body.no-gsap .skill-tag, body.no-gsap .char, body.no-gsap .reveal,
+body.no-gsap .reveal-left, body.no-gsap .reveal-scale {
+  opacity: 1 !important; transform: none !important; clip-path: none !important;
 }
 </style>
 
@@ -932,4 +954,40 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
     if (target) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth' }); }
   });
 });
+</script>
+<script>
+/* Runs in its own block so a GSAP failure above cannot take it down. */
+(function () {
+  document.querySelectorAll(
+    'a, button, .project-card, .pub-card, .skill-tag, .edu-card, .contact-link, .pub-link, .stat-item'
+  ).forEach(el => {
+    el.classList.add('neon-hoverable');
+    const d = getComputedStyle(el).display;
+    if (d.indexOf('inline') === 0 && d.indexOf('block') < 0 && d.indexOf('flex') < 0) {
+      el.classList.add('neon-inline');
+    }
+  });
+
+  // Without this, a blocked or slow GSAP CDN leaves the preloader covering the page forever.
+  function reveal() {
+    document.body.classList.add('no-gsap');
+    const pre = document.getElementById('preloader');
+    if (pre) pre.style.display = 'none';
+    document.querySelectorAll('.reveal, .reveal-left, .reveal-scale').forEach(el => el.classList.add('visible'));
+    document.querySelectorAll('.char').forEach(c => {
+      c.style.clipPath = 'none'; c.style.transform = 'none'; c.style.opacity = 1;
+    });
+    document.querySelectorAll('.skill-tag').forEach(el => el.classList.add('appeared'));
+    document.querySelectorAll('.stat-item').forEach(el => {
+      el.classList.add('revealed');
+      const n = el.querySelector('[data-target]');
+      if (n) n.textContent = n.dataset.target + (n.dataset.suffix || '');
+    });
+  }
+  if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') reveal();
+  else setTimeout(function () {
+    const pre = document.getElementById('preloader');
+    if (pre && pre.style.display !== 'none' && pre.getBoundingClientRect().top > -50) reveal();
+  }, 6000);
+})();
 </script>
